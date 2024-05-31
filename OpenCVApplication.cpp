@@ -1,4 +1,4 @@
-﻿// OpenCVApplication.cpp : Defines the entry point for the console application.
+// OpenCVApplication.cpp : Defines the entry point for the console application.
 //
 
 #include "stdafx.h"
@@ -346,15 +346,9 @@ void testSnap()
 	}
 
 }
-bool isInside(Mat img, int i, int j) {
-	int height = img.rows;
-	int width = img.cols;
-	if (i >= 0 && i < height && j >= 0 && j < width) {
-		return true;
-	}
-	else {
-		return false;
-	}
+
+bool isInside(const Mat& src, int i, int j) {
+	return (i >= 0 && i < src.rows&& j >= 0 && j < src.cols);
 }
 void MyCallBackFunc(int event, int x, int y, int flags, void* param)
 {
@@ -438,7 +432,7 @@ void lab4_trasaturi(Mat_<uchar> img) {
 	for (int r = 0; r < img.rows; r++)
 	{
 		for (int c = 0; c < img.cols; c++) {
-			if (img(r, c) == 0) {
+			
 				if (img(r, c) == 0) {
 					if (img(r - 1, c) != 0 || img(r, c - 1) != 0 || img(r, c + 1) != 0 || img(r + 1, c) != 0 || img(r - 1, c - 1) != 0 || img(r + 1, c + 1) != 0 || img(r - 1, c + 1) || img(r + 1, c - 1))
 						perimetru++;
@@ -451,7 +445,7 @@ void lab4_trasaturi(Mat_<uchar> img) {
 					if (cmax < c)
 						cmax = c;
 				}
-			}
+			
 		}
 	}
 
@@ -1220,156 +1214,7 @@ void testL3P4(int m) {
 	}
 
 }
-void MyCallBackGeoFunc(int event, int x, int y, int flags, void* param)
-{
-	//More examples: http://opencvexamples.blogspot.com/2014/01/detect-mouse-clicks-and-moves-on-image.html
-	Mat* src = (Mat*)param;
-	int height = src->rows;
-	int width = src->cols;
-	int area = 0;
-	float r = 0;
-	float c = 0;
-	float sum;
-	float f1 = 0;
-	float f2 = 0;
-	float f3 = 0;
 
-	if (event == EVENT_LBUTTONDBLCLK)
-	{
-		printf("Pos(x,y): %d,%d  Color(RGB): %d,%d,%d\n",
-			x, y,
-			(int)(*src).at<Vec3b>(y, x)[2],
-			(int)(*src).at<Vec3b>(y, x)[1],
-			(int)(*src).at<Vec3b>(y, x)[0]);
-
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				if ((int)(*src).at<Vec3b>(i, j)[0] == (int)(*src).at<Vec3b>(y, x)[0] && (int)(*src).at<Vec3b>(i, j)[1] == (int)(*src).at<Vec3b>(y, x)[1] && (int)(*src).at<Vec3b>(i, j)[2] == (int)(*src).at<Vec3b>(y, x)[2]) {
-					area++;
-					//centre of mass
-					r = r + i;
-					c = c + j;
-				}
-			}
-		}
-
-		float r1 = r / area;
-		float c1 = c / area;
-		printf("%d \n", area);
-		printf("Center of mass: %f \n", r1);
-		printf("Center of mass: %f \n", c1);
-
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				if ((int)(*src).at<Vec3b>(i, j)[0] == (int)(*src).at<Vec3b>(y, x)[0] && (int)(*src).at<Vec3b>(i, j)[1] == (int)(*src).at<Vec3b>(y, x)[1] && (int)(*src).at<Vec3b>(i, j)[2] == (int)(*src).at<Vec3b>(y, x)[2]) {
-
-					//elongation
-					f3 = f3 + (2 * (i - r1) * (j - c1));
-					f2 = f2 + pow((j - c1), 2) - pow((i - r1), 2);
-
-				}
-			}
-		}
-
-		double aux = atan2(f3, f2) / 2;
-		if (aux < 0)
-			aux = aux + CV_PI;
-		aux = aux * (180 / CV_PI);
-		printf("Angle axis of elongation: %f \n", aux);
-
-
-		Vec3b pixel = Vec3b((*src).at<Vec3b>(y, x)[0], (*src).at<Vec3b>(y, x)[1], (*src).at<Vec3b>(y, x)[2]);
-
-		int perimeter = 0;
-		int imin = 999999, jmin = 999999, imax = -1, jmax = -1;
-
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				if (pixel == (*src).at<Vec3b>(i, j)) {
-
-					if ((src->at<Vec3b>(i + 1, j) != pixel) || (src->at<Vec3b>(i, j + 1) != pixel) ||
-						(src->at<Vec3b>(i - 1, j) != pixel) || (src->at<Vec3b>(i, j - 1) != pixel) ||
-						(src->at<Vec3b>(i - 1, j - 1) != pixel) || (src->at<Vec3b>(i + 1, j + 1) != pixel) ||
-						(src->at<Vec3b>(i - 1, j + 1) != pixel) || (src->at<Vec3b>(i + 1, j - 1) != pixel))
-						perimeter++;
-
-					if (imin > i)
-						imin = i;
-					if (imax < i)
-						imax = i;
-					if (jmin > j)
-						jmin = j;
-					if (jmax < j)
-						jmax = j;
-
-				}
-			}
-		}
-
-		perimeter = perimeter * (CV_PI / 4);
-		printf("Perimeter: %d \n", perimeter);
-
-		float thickness = 4 * CV_PI * ((float)area / pow(perimeter, 2));
-		printf("Thinning ratio: %f\n", thickness);
-
-		float ratio = (float)(jmax - jmin + 1) / (float)(imax - imin + 1);
-		printf("Aspect ratio: %f\n", ratio);
-
-		Mat horz = Mat(height, width, CV_8UC3);
-		Mat vert = Mat(height, width, CV_8UC3);
-
-
-		int k;
-		for (int j = 0; j < width; j++) {
-			k = 0;
-			for (int i = 0; i < height; i++) {
-				if (pixel == (*src).at<Vec3b>(i, j)) {
-					k++;
-					horz.at<Vec3b>(k, j) = Vec3b(50, 50, 50);
-				}
-			}
-		}
-		imshow("Horizontal Projection", horz);
-
-
-		for (int i = 0; i < height; i++) {
-			k = 0;
-			for (int j = 0; j < width; j++) {
-				if (pixel == (*src).at<Vec3b>(i, j)) {
-					k++;
-					vert.at<Vec3b>(i, k) = Vec3b(50, 50, 50);
-				}
-			}
-		}
-
-		imshow("Vertical Projection", vert);
-
-		aux = aux / (180 / CV_PI);
-
-		float ra = r1 + tan(aux) * (jmin - c1);
-		float rb = r1 + tan(aux) * (jmax - c1);
-
-		Point A(jmin, ra);
-		Point B(jmax, rb);
-
-		line(*src, A, B, Scalar(0, 0, 0), 3);
-
-		imshow("Axis Projection", *src);
-
-	}
-}
-void lab4_1() {
-
-	Mat_<Vec3b> src = imread("Images/trasaturi_geom.bmp");
-	int height = src.rows;
-	int width = src.cols;
-	imshow("src", src);
-	//MyCallBackGeoFunc
-	setMouseCallback("src", MyCallBackGeoFunc, &src);
-	//setMouseCallback("src", onMouse, &src);
-	waitKey();
-
-}
 void lab4()
 {
 	char fname[MAX_PATH];
@@ -2117,6 +1962,708 @@ void lab8_transformare_analitica() {
 	}
 }
 
+void lab9_mediaAritmeticaFilter() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+
+		int height = src.rows;
+		int width = src.cols;
+		int H[3][3] = { 1,1,1,1,1,1,1,1,1 };
+		int divide = 9;
+		int w = 3;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+
+		dst = src.clone();
+
+		for (int i = 1; i < src.rows-1; i++) {
+			for (int j = 1; j < src.cols-1; j++) {
+				float pixelVal = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						pixelVal += H[k][l] * src.at<uchar>(i + k - (w / 2), j + l - (w / 2));
+					}
+				}
+				dst.at<uchar>(i, j) = pixelVal / divide;
+
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+void lab9_gaussianFilter() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+
+		int height = src.rows;
+		int width = src.cols;
+		int H[3][3] = { 1,2,1,2,4,2,1,2,1 };
+		int divide = 16;
+		int w = 3;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+
+		dst = src.clone();
+
+		for (int i = 1; i < src.rows - 1; i++) {
+			for (int j = 1; j < src.cols - 1; j++) {
+				float pixelVal = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						pixelVal += H[k][l] * src.at<uchar>(i + k - (w / 2), j + l - (w / 2));
+					}
+				}
+				dst.at<uchar>(i, j) = pixelVal / divide;
+
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+void lab9_laplaceFilter() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+
+		int height = src.rows;
+		int width = src.cols;
+		int H[3][3] = { 0,-1,0,-1,4,-1,0,-1,0 };
+		int w = 3;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+
+		dst = src.clone();
+
+		for (int i = 1; i < src.rows - 1; i++) {
+			for (int j = 1; j < src.cols - 1; j++) {
+				float pixelVal = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						pixelVal += H[k][l] * src.at<uchar>(i + k - (w / static_cast<float>(2)), j + l - (w / static_cast<float>(2)));
+					}
+				}
+				if (pixelVal < 0) {
+					dst.at<uchar>(i, j) = 0;
+				}
+				else if (pixelVal > 255) {
+					dst.at<uchar>(i, j) = 255;
+				}
+				else dst.at<uchar>(i, j) = pixelVal;
+
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+void lab9_highPassFilter() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+
+		int height = src.rows;
+		int width = src.cols;
+		int H[3][3] = { 0,-1,0,-1,5,-1,0,-1,0 };
+		int w = 3;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+
+		dst = src.clone();
+
+		for (int i = 1; i < src.rows - 1; i++) {
+			for (int j = 1; j < src.cols - 1; j++) {
+				float pixelVal = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						pixelVal += H[k][l] * src.at<uchar>(i + k - (w / 2), j + l - (w / 2));
+					}
+				}
+				if (pixelVal < 0) {
+					dst.at<uchar>(i, j) = 0;
+				}
+				else if (pixelVal > 255) {
+					dst.at<uchar>(i, j) = 255;
+				}
+				else dst.at<uchar>(i, j) = pixelVal;
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+
+void lab10_medianfilter() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+
+		int height = src.rows;
+		int width = src.cols;
+		int w = 3;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+
+		dst = src.clone();
+
+		for (int i = w/2; i < src.rows-w/2-1 ; i++) {
+			for (int j = w/2; j < src.cols-w/2-1; j++) {
+				std::vector<uchar> contur;
+				contur.clear();
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						int ni = i + k - (w / 2);
+						int nj = j + l - (w / 2);
+						if (isInside(src, ni, nj)) {
+							contur.push_back(src.at<uchar>(ni, nj));
+						}
+					}
+				}
+				if (!contur.empty()) {
+					std::sort(contur.begin(), contur.end());
+					dst.at<uchar>(i, j) = contur[contur.size() / 2];
+				}
+				
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+
+void lab10_gaussian1x2d() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		int height = src.rows;
+		int width = src.cols;
+		int m = height * width;
+		float v = 0.8;
+		int w = ceil(v * 6); //5
+		cout << w;
+		
+		Mat dst = Mat(height, width, CV_8UC1);
+		dst = src.clone();
+		Mat tmp = Mat(height, width, CV_8UC1);
+		if (w % 2 == 0) {
+			w++;
+		}
+
+		int x0 = w / 2, y0 = w / 2;
+		float G[10][10];
+		float sum = 0;
+		float constant = 1 / (2 * PI * v * v);
+
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < w; j++) {
+				G[i][j] = constant * exp(-((i - x0) * (i - x0) + (j - y0) * (j - y0)) / (2 * v * v));
+				sum = sum + G[i][j];
+			}
+		}
+		for (int i = w/2; i < src.rows-w/2-1 ; i++) {
+			for (int j = w/2; j < src.cols-w/2-1; j++) {
+				float res = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						int ni = i + k - (w / 2);
+						int nj = j + l - (w / 2);
+						if (isInside(src, ni, nj)) {
+							res=res+(src.at<uchar>(ni, nj))*G[k][l];
+						}
+					}
+				}
+				res = res / sum;
+				if (res > 255) {
+					dst.at<uchar>(i, j) = 255;
+
+				}
+				else if (res < 0) {
+					dst.at<uchar>(i, j) = 0;
+
+				}
+				else {
+					dst.at<uchar>(i, j) = res;
+				}
+			}
+		}
+		
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+
+void lab10_gaussian2x1d() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		int height = src.rows;
+		int width = src.cols;
+		int m = height * width;
+		float v = 0.8;
+		int w = ceil(v * 6); //5
+		cout << w;
+
+		Mat dst = Mat(height, width, CV_8UC1);
+		dst = src.clone();
+		Mat tmp = Mat(height, width, CV_8UC1);
+		if (w % 2 == 0) {
+			w++;
+		}
+
+		int x0 = w / 2, y0 = w / 2;
+		float Gi[10],Gj[10];
+		float sum = 0;
+		float constant = 1 / sqrt(2 * PI * v * v);
+		for (int i = 0; i < w; i++) {
+			Gi[i] = constant * exp(-((i - x0) * (i - x0)) / (2 * v * v));
+			sum = sum + Gi[i];
+		}
+		
+		for (int i = w/2; i < src.rows-w/2-1; i++) {
+			for (int j = w/2; j < src.cols-w/2-1; j++) {
+				float res = 0;
+				for (int k = 0; k < w; k++) {
+					int ni = i + k - (w / 2);
+					if (isInside(src, ni, j)) {
+						res = res + (src.at<uchar>(ni, j)) * Gi[k];
+					}
+				}
+				res = res / sum;
+				tmp.at<uchar>(i, j) = res;
+			}
+		}
+		sum = 0;
+		
+		for (int j = 0; j < w; j++) {
+			Gj[j] = constant * exp(-((j - y0) * (j - y0)) / (2 * v * v));
+			sum = sum + Gj[j];
+		}
+
+		for (int i = w/2; i < tmp.rows-w/2-1; i++) {
+			for (int j = w/2; j < tmp.cols-w/2-1; j++) {
+				float res = 0;
+				for (int k = 0; k < w; k++) {
+					int nj = j + k - (w / 2);
+					if (isInside(tmp, k, nj)) {
+						res = res + (tmp.at<uchar>(i, nj)) * Gj[k];
+					}
+				}
+				res = res / sum;
+				dst.at<uchar>(i, j) = res;
+
+			}
+		}
+
+		imshow("src", src);
+		imshow("Result", dst);
+		waitKey(0);
+	}
+}
+
+void lab11_roberts() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		imshow("src", src);
+		int height = src.rows;
+		int width = src.cols;
+
+		float Gx[2][2] = { {1, 0}, {0, -1} };
+		float Gy[2][2] = { {0, 1}, {-1, 0} };
+		Mat dstX = Mat::zeros(height, width, CV_32FC1);
+		Mat dstY = Mat::zeros(height, width, CV_32FC1);
+
+		//  gradient
+		for (int i = 0; i < height - 1; i++) {
+			for (int j = 0; j < width - 1; j++) {
+				float resX = 0;
+				float resY = 0;
+				for (int k = 0; k < 2; k++) {
+					for (int l = 0; l < 2; l++) {
+						resX += Gx[k][l] * src.at<uchar>(i + k, j + l);
+						resY += Gy[k][l] * src.at<uchar>(i + k, j + l);
+					}
+				}
+				dstX.at<float>(i, j) = resX;
+				dstY.at<float>(i, j) = resY;
+			}
+		}
+
+		Mat modul_float = Mat(height, width, CV_32FC1);
+		Mat directie = Mat(height, width, CV_32FC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul_float.at<float>(i, j) = sqrt(dstX.at<float>(i, j) * dstX.at<float>(i, j) + dstY.at<float>(i, j) * dstY.at<float>(i, j));
+				directie.at<float>(i, j) = atan2(dstY.at<float>(i, j), dstX.at<float>(i, j));
+			}
+		}
+
+		Mat modul = Mat(height, width, CV_8UC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul.at<uchar>(i, j) = saturate_cast<uchar>(modul_float.at<float>(i, j));
+			}
+		}
+
+		imshow("modul", modul);
+		waitKey(0);
+	}
+}
+
+void lab11_sobel() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		imshow("src", src);
+		int height = src.rows;
+		int width = src.cols;
+		int w = 3;
+		// Sobel
+		float Gx[3][3] = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
+		float Gy[3][3] = { {1, 2, 1}, {0, 0, 0}, {-1, -2, -1} };
+		Mat dstX = Mat::zeros(height, width, CV_32FC1);
+		Mat dstY = Mat::zeros(height, width, CV_32FC1);
+
+		// Calculate gradient
+		for (int i = w / 2; i < height - w / 2; i++) {
+			for (int j = w / 2; j < width - w / 2; j++) {
+				float resX = 0;
+				float resY = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						resX += Gx[k][l] * src.at<uchar>(i + k - w / 2, j + l - w / 2);
+						resY += Gy[k][l] * src.at<uchar>(i + k - w / 2, j + l - w / 2);
+					}
+				}
+				dstX.at<float>(i, j) = resX;
+				dstY.at<float>(i, j) = resY;
+			}
+		}
+
+		Mat modul_float = Mat(height, width, CV_32FC1);
+		Mat directie = Mat(height, width, CV_32FC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul_float.at<float>(i, j) = sqrt(dstX.at<float>(i, j) * dstX.at<float>(i, j) + dstY.at<float>(i, j) * dstY.at<float>(i, j));
+				directie.at<float>(i, j) = atan2(dstY.at<float>(i, j), dstX.at<float>(i, j));
+			}
+		}
+
+		Mat modul = Mat(height, width, CV_8UC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul.at<uchar>(i, j) = saturate_cast<uchar>(modul_float.at<float>(i, j));
+			}
+		}
+
+		imshow("modul", modul);
+		waitKey(0);
+	}
+}
+
+void lab11_prewitt() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		imshow("src", src);
+		int height = src.rows;
+		int width = src.cols;
+		//Prewitt
+		float Gx[3][3] = { -1,0,1,-1,0,1,-1,0,1 };
+		float Gy[3][3] = { 1,1,1,0,0,0,-1,-1,-1 };
+		Mat dstX = Mat::zeros(height, width, CV_32FC1);
+		Mat dstY = Mat::zeros(height, width, CV_32FC1);
+		int w = 3;
+		// gradientul
+		for (int i = w / 2; i < height - w / 2; i++) {
+			for (int j = w / 2; j < width - w / 2; j++) {
+				float resX = 0;
+				float resY = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						resX += Gx[k][l] * src.at<uchar>(i + k - w / 2, j + l - w / 2);
+						resY += Gy[k][l] * src.at<uchar>(i + k - w / 2, j + l - w / 2);
+					}
+				}
+				dstX.at<float>(i, j) = resX;
+				dstY.at<float>(i, j) = resY;
+			}
+		}
+
+		Mat modul_float = Mat(height, width, CV_32FC1);
+		Mat directie = Mat(height, width, CV_32FC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul_float.at<float>(i, j) = sqrt(dstX.at<float>(i, j) * dstX.at<float>(i, j) + dstY.at<float>(i, j) * dstY.at<float>(i, j));
+				directie.at<float>(i, j) = atan2(dstY.at<float>(i, j), dstX.at<float>(i, j));
+			}
+		}
+
+		Mat modul = Mat(height, width, CV_8UC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul.at<uchar>(i, j) = saturate_cast<uchar>(modul_float.at<float>(i, j));
+			}
+		}
+		imshow("src", src);
+		imshow("modul", modul);
+		waitKey(0);
+	}
+}
+
+void lab11_canny() {
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)) {
+		Mat src = imread(fname, IMREAD_GRAYSCALE);
+		imshow("src", src);
+		Mat tmp = src.clone();
+		int height = src.rows;
+		int width = src.cols;
+		int w = 3;
+		float v = w / 6.0;
+		int x0 = w / 2;
+		int y0 = w / 2;
+		float constant = 1 / (2.0 * v * v * CV_PI);
+		float G[3][3];
+		float sum = 0;
+
+		//filtrul Gaussian
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < w; j++) {
+				G[i][j] = constant * exp(-((i - x0) * (i - x0) + (j - y0) * (j - y0)) / (2 * v * v));
+				sum += G[i][j];
+			}
+		}
+
+		// Normalizare
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < w; j++) {
+				G[i][j] /= sum;
+			}
+		}
+
+		// filtram
+		for (int i = w / 2; i < height - w / 2; i++) {
+			for (int j = w / 2; j < width - w / 2; j++) {
+				float res = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						res += G[k][l] * src.at<uchar>(i + k - w / 2, j + l - w / 2);
+					}
+				}
+				tmp.at<uchar>(i, j) = saturate_cast<uchar>(res);
+			}
+		}
+
+		imshow("filtru gaussian", tmp);
+
+		//Prewitt
+		float Gx[3][3] = { -1,0,1,-1,0,1,-1,0,1 };
+		float Gy[3][3] = { 1,1,1,0,0,0,-1,-1,-1 };
+		//Sobel
+		//float Gx[3][3] = {-1,0,1,-2,0,2,-1,0,1};
+		//float Gy[3][3] = {1,2,1,0,0,0,-1,-2,-1};
+
+		Mat dstX = Mat::zeros(height, width, CV_32FC1);
+		Mat dstY = Mat::zeros(height, width, CV_32FC1);
+
+		// gradientul
+		for (int i = w / 2; i < height - w / 2; i++) {
+			for (int j = w / 2; j < width - w / 2; j++) {
+				float resX = 0;
+				float resY = 0;
+				for (int k = 0; k < w; k++) {
+					for (int l = 0; l < w; l++) {
+						resX += Gx[k][l] * tmp.at<uchar>(i + k - w / 2, j + l - w / 2);
+						resY += Gy[k][l] * tmp.at<uchar>(i + k - w / 2, j + l - w / 2);
+					}
+				}
+				dstX.at<float>(i, j) = resX;
+				dstY.at<float>(i, j) = resY;
+			}
+		}
+
+		Mat modul_float = Mat(height, width, CV_32FC1);
+		Mat directie = Mat(height, width, CV_32FC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul_float.at<float>(i, j) = sqrt(dstX.at<float>(i, j) * dstX.at<float>(i, j) + dstY.at<float>(i, j) * dstY.at<float>(i, j));
+				directie.at<float>(i, j) = atan2(dstY.at<float>(i, j), dstX.at<float>(i, j));
+			}
+		}
+
+		Mat modul = Mat(height, width, CV_8UC1);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul.at<uchar>(i, j) = saturate_cast<uchar>(modul_float.at<float>(i, j));
+			}
+		}
+
+		/*
+		//pt Sobel
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				modul.at<float>(i, j) = modul.at<float>(i, j) / (4 * sqrt(2));
+			}
+		}
+		*/
+
+		//determinam muchiile 
+		Mat non_maxima = modul.clone();
+		for (int i = 1; i < height - 1; i++) {
+			for (int j = 1; j < width - 1; j++) {
+				int direction = 0;
+				float angle = directie.at<float>(i, j) * 180.0f / CV_PI;
+				if (angle < 0.0f) {
+					angle += 360.0f;
+				}
+				if ((angle >= 337.5f) || (angle < 22.5f)|| (angle >= 157.5f && angle < 202.5f)) {
+					direction = 2;
+				}
+				else if ((angle >= 22.5 && angle < 67.5f) || (angle >= 202.5f && angle < 247.5f)) {
+					direction = 1;
+				}
+				else if ((angle >= 112.5f && angle < 157.5f)|| (angle >= 292.5f && angle < 337.5f)) {
+					direction = 3;
+				}
+				bool max = true;
+				if (direction == 0) {
+					if (isInside(src, i - 1, j) && modul.at<uchar>(i, j) < modul.at<uchar>(i - 1, j)) {
+						max = false;
+					}
+					if (isInside(src, i + 1, j) && modul.at<uchar>(i, j) < modul.at<uchar>(i + 1, j)) {
+						max = false;
+					}
+				}
+				else if (direction == 1) {
+					if (isInside(src, i - 1, j + 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i - 1, j + 1)) {
+						max = false;
+					}
+					if (isInside(src, i + 1, j - 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i + 1, j - 1)) {
+						max = false;
+					}
+				}
+				else if (direction == 2) {
+					if (isInside(src, i, j + 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i, j + 1)) {
+						max = false;
+					}
+					if (isInside(src, i, j - 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i, j - 1)) {
+						max = false;
+					}
+				}
+				else if (direction == 3) {
+					if (isInside(src, i + 1, j + 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i + 1, j + 1)) {
+						max = false;
+					}
+					if (isInside(src, i - 1, j - 1) && modul.at<uchar>(i, j) < modul.at<uchar>(i - 1, j - 1)) {
+						max = false;
+					}
+				}
+				if (!max) {
+					non_maxima.at<uchar>(i, j) = 0;
+				}
+			}
+		}
+
+		
+		imshow("suprimarea non-maxima", non_maxima);
+
+		// histograma si histerizarea
+		int histogram[256] = { 0 };
+		int pixelConsiderated = 0;
+		for (int i = 1; i < height - 1; i++) {
+			for (int j = 1; j < width - 1; j++) {
+				int value = non_maxima.at<uchar>(i, j);
+				histogram[value]++;
+				pixelConsiderated++;
+			}
+		}
+		float p = 0.1;
+		int nonEdge = static_cast<int>((1.0 - p) * (pixelConsiderated - histogram[0]));
+		int currentNo = 0;
+		int index = 1;
+		while (currentNo <= nonEdge) {
+			currentNo += histogram[index];
+			index++;
+		}
+		int prag_high = index - 1;
+		float k_prag = 0.4;
+		cout << "pragul Adaptiv " << prag_high << "\n"; //prag inalt
+		int prag_low = static_cast<int>(prag_high * k_prag);
+
+		Mat mat_histerizare = non_maxima.clone();
+		// muchiile tari si slabe
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (non_maxima.at<uchar>(i, j) >= prag_high) {
+					mat_histerizare.at<uchar>(i, j) = 255;
+				}
+				else if (non_maxima.at<uchar>(i, j) >= prag_low) {
+					mat_histerizare.at<uchar>(i, j) = 128;
+				}
+				else {
+					mat_histerizare.at<uchar>(i, j) = 0;
+				}
+			}
+		}
+
+		imshow("muchii inainte", mat_histerizare);
+
+		Mat visitat = Mat::zeros(height, width, CV_8UC1);
+		Mat muchii_final = mat_histerizare.clone();
+
+		// facem muchiile slabe tari
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (muchii_final.at<uchar>(i, j) == 255 && visitat.at<uchar>(i, j) == 0) {
+					queue<pair<int, int>> Q;
+					Q.push(make_pair(i, j));
+					while (!Q.empty()) {
+						pair<int, int> p = Q.front();
+						Q.pop();
+						visitat.at<uchar>(p.first, p.second) = 255;
+						//prin vecini
+						int di[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+						int dj[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+						for (int k = 0; k < 8; k++) {
+							int ni = p.first + di[k];
+							int nj = p.second + dj[k];
+							if (isInside(src, ni, nj) && muchii_final.at<uchar>(ni, nj) == 128) {
+								Q.push(make_pair(ni, nj));
+								muchii_final.at<uchar>(ni, nj) = 255;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (muchii_final.at<uchar>(i, j) < 255) {
+					muchii_final.at<uchar>(i, j) = 0;
+				}
+			}
+		}
+
+		imshow("muchii finale", muchii_final);
+		waitKey(0);
+	}
+}
 
 
 /* Histogram display function - display a histogram using bars (simlilar to L3 / PI)
@@ -2245,15 +2792,15 @@ int main()
 				
 				break;
 			case 25:
-				printf("am ajuns aici ce bine");
+				//printf("am ajuns aici ce bine");
 				lab7_dilatare();
 				break;
 			case 26:
-				printf("am ajuns aici ce bine");
+				//printf("am ajuns aici ce bine");
 				lab7_eroziune();
 				break;
 			case 27:
-				printf("am ajuns aici ce bine");
+				//printf("am ajuns aici ce bine");
 				lab7_deschidere_inchidere();
 				break;
 			case 28:
@@ -2278,6 +2825,20 @@ int main()
 			case 34:
 				lab8_transformare_analitica();
 				break;
+			case 35:
+				lab10_medianfilter();
+				break;
+			case 36:
+				lab10_gaussian1x2d();
+				break;
+			case 37:
+				lab10_gaussian2x1d();
+				
+				break;
+			case 38:
+				lab11_canny();
+				break;
+			
 		}
 	}
 	while (op!=0);
